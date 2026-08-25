@@ -15,8 +15,29 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Docker (via Colima)
-        uses: douglascamata/setup-docker-macos-action@v1-alpha
+      - name: Install Docker CLI and Colima
+        run: |
+          brew update
+          brew install docker colima docker-buildx
+
+      - name: Start Colima
+        run: |
+          colima start --cpu 3 --memory 8 --disk 60
+          colima status
+
+      - name: Locate Docker socket and set DOCKER_HOST
+        run: |
+          SOCK=$(colima status --json | grep -o '"socket":"[^"]*' | cut -d'"' -f4 || true)
+          if [ -z "$SOCK" ]; then
+            SOCK="${HOME}/.colima/default/docker.sock"
+          fi
+          echo "Using socket: $SOCK"
+          echo "DOCKER_HOST=unix://${SOCK}" >> "$GITHUB_ENV"
+
+      - name: Verify Docker is reachable
+        run: |
+          docker context ls
+          docker info
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
