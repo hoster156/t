@@ -20,6 +20,7 @@ jobs:
       - name: Build Docker image
         uses: nick-fields/retry@v3
         with:
+          timeout_minutes: 15
           max_attempts: 3
           retry_wait_seconds: 15
           on_retry_command: echo "⚠️ Retrying Docker build..."
